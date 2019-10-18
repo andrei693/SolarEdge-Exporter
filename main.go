@@ -48,10 +48,10 @@ func main() {
 	config.InitConfig()
 
 	// Open Logger
-	f, err := os.OpenFile("SolarEdge-Exporter.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(viper.GetString("Exporter.LogPath")+"SolarEdge-Exporter.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Printf("Could not open log file: %s", err.Error())
-		return
+		os.Exit(1)
 	}
 	defer f.Close()
 	m := io.MultiWriter(zerolog.ConsoleWriter{Out: os.Stdout}, f)
@@ -61,6 +61,7 @@ func main() {
 	log.Info().Msgf("Configured Inverter Port: %d", viper.GetInt("SolarEdge.InverterPort"))
 	log.Info().Msgf("Configured Listen Address: %s", viper.GetString("Exporter.ListenAddress"))
 	log.Info().Msgf("Configured Listen Port: %d", viper.GetInt("Exporter.ListenPort"))
+	log.Info().Msgf("Configured Log Path: %s", viper.GetString("Exporter.LogPath"))
 
 	// Start Data Collection
 	// TODO: Add a cancellation context on SIGINT to cleanly close the connection
@@ -98,7 +99,6 @@ func runCollection() {
 	log.Info().Msgf("Inverter Model: %s", cm.C_Model)
 	log.Info().Msgf("Inverter Serial: %s", cm.C_SerialNumber)
 	log.Info().Msgf("Inverter Version: %s", cm.C_Version)
-
 
 	infoData2, err := client.ReadHoldingRegisters(40121, 65)
 	cm2, err := solaredge.NewCommonMeter(infoData2)
